@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Refactoring: Single Responsibility Principle (SRP)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #1e1e2e;
+      color: #cdd6f4;
+      padding: 30px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 950px;
+      margin: 0 auto;
+      background: #181825;
+      border: 1px solid #313244;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      overflow: hidden;
+    }
+    .header {
+      background: #11111b;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #313244;
+    }
+    .header .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+    .dot.red { background: #f38ba8; }
+    .dot.yellow { background: #f9e2af; }
+    .dot.green { background: #a6e3a1; }
+    .header h1 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #bac2de;
+      letter-spacing: 0.5px;
+      margin-left: 8px;
+    }
+    .chat-body {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .message {
+      display: flex;
+      gap: 16px;
+    }
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .avatar.user { background: #89b4fa; color: #11111b; }
+    .avatar.ai { background: #cba6f7; color: #11111b; }
+    .bubble {
+      flex: 1;
+      background: #1e1e2e;
+      border: 1px solid #313244;
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .bubble h2 {
+      font-size: 18px;
+      color: #89b4fa;
+      margin-bottom: 12px;
+    }
+    .bubble h3 {
+      font-size: 15px;
+      color: #f9e2af;
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+    .bubble p, .bubble li {
+      font-size: 14px;
+      color: #cdd6f4;
+      margin-bottom: 10px;
+    }
+    .bubble ul {
+      padding-left: 20px;
+      margin-bottom: 12px;
+    }
+    pre {
+      background: #11111b;
+      border: 1px solid #313244;
+      border-radius: 8px;
+      padding: 14px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", "Fira Code", monospace;
+      font-size: 12.5px;
+      color: #a6e3a1;
+      margin: 10px 0;
+      line-height: 1.45;
+    }
+    code {
+      font-family: monospace;
+      background: #313244;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12.5px;
+      color: #f38ba8;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .badge-refactor { background: #a6e3a1; color: #11111b; }
+    .highlight-box {
+      background: rgba(166, 227, 161, 0.1);
+      border-left: 4px solid #a6e3a1;
+      padding: 12px 16px;
+      margin: 12px 0;
+      border-radius: 0 8px 8px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span class="dot red"></span>
+      <span class="dot yellow"></span>
+      <span class="dot green"></span>
+      <h1>Pair Programming AI Assistant — Refactoring: SRP & Modularity</h1>
+    </div>
+
+    <div class="chat-body">
+      <!-- User Prompt -->
+      <div class="message">
+        <div class="avatar user">KK</div>
+        <div class="bubble">
+          <span class="badge badge-refactor">Refactor Prompt</span>
+          <p><strong>Review <code>addTask</code> for Single Responsibility Principle (SRP) violations:</strong></p>
+          <ul style="margin-bottom: 4px;">
+            <li>Identify all SRP violations (task management vs state checking, scheduling, and logging).</li>
+            <li>Refactor by extracting logging/scheduling out into a separate class/component so <code>addTask</code> is strictly focused on task insertion.</li>
+            <li>Explain how this refactoring improves testability and maintainability.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- AI Response -->
+      <div class="message">
+        <div class="avatar ai">AI</div>
+        <div class="bubble">
+          <h2>SRP Analysis & Refactoring Solution</h2>
+
+          <h3>1. Identified SRP Violations</h3>
+          <p>The legacy <code>addTask</code> method attempted to perform 4 distinct responsibilities:</p>
+          <ul>
+            <li><strong>Task validation & storage:</strong> Validating <code>taskFn</code> and pushing into <code>this.tasks</code>.</li>
+            <li><strong>Queue State Evaluation:</strong> Inspecting queue length to trigger processing (<code>this.tasks.length === 1</code>).</li>
+            <li><strong>Execution Scheduling:</strong> Spawning background execution via <code>this._startProcessing()</code>.</li>
+            <li><strong>Notification & Alerting:</strong> Console output and high-priority alerts via <code>notify()</code>.</li>
+          </ul>
+
+          <h3>2. Refactored Implementation (Extracted Notifier & Clean Queue)</h3>
+<pre><code>class QueueNotifier {
+  notifyQueueStarted(queueName) {
+    console.log(`Starting queue ${queueName}.`);
+  }
+  notifyHighPriorityTask(queueName, priority) {
+    if (priority > 9) {
+      console.warn(`High priority task added to ${queueName}.`);
+    }
+  }
+  logError(message) {
+    console.error(message);
+  }
+}
+
+class TaskQueue {
+  constructor(name, notifier = new QueueNotifier()) {
+    this.queueName = name;
+    this.tasks = [];
+    this.isProcessing = false;
+    this.notifier = notifier;
+  }
+
+  addTask(taskFn, priority = 0) {
+    if (typeof taskFn !== 'function') {
+      this.notifier.logError('Task must be a function.');
+      return false;
+    }
+    this.tasks.push({ taskFn, priority, timestamp: Date.now() });
+    if (priority > 9) {
+      this.notifier.notifyHighPriorityTask(this.queueName, priority);
+    }
+    return true;
+  }
+
+  startProcessing() {
+    if (this.isProcessing || this.tasks.length === 0) return;
+    this.isProcessing = true;
+    this.notifier.notifyQueueStarted(this.queueName);
+    while (this.tasks.length > 0) {
+      const current = this.tasks.shift();
+      try { current.taskFn(); } catch (e) { this.notifier.logError(e.message); }
+    }
+    this.isProcessing = false;
+  }
+}</code></pre>
+
+          <h3>3. Architectural Benefits</h3>
+          <div class="highlight-box">
+            <ul>
+              <li><strong>Enhanced Testability:</strong> <code>addTask</code> can now be tested in pure isolation without side effects (no automatic task execution or polluted console logs). Mock notifiers can be injected via the constructor.</li>
+              <li><strong>High Modularity & Maintainability:</strong> Changes to logging destinations (e.g. shipping logs to Datadog or Slack) only touch <code>QueueNotifier</code>, leaving core queue logic untouched.</li>
+              <li><strong>Resolved Scope Bug:</strong> <code>name</code> was replaced with <code>this.queueName</code>, eliminating the runtime <code>ReferenceError</code>.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
